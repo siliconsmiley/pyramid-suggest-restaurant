@@ -2,71 +2,24 @@ package com.pyramid;
 
 import java.util.*;
 
-//TODO use generics?
 enum Cuisine {
-    MEDITERRANEAN("Mediterranean"),
-    BURGERS("Burgers & Fries"),
-    CHINESE("Chinese"),
-    MEXICAN("Mexican");
+    MEDITERRANEAN, BURGERS, CHINESE, MEXICAN
+}
 
-    private final String name;
+class Employee {
+    final String name;
+    final List<Cuisine> cuisines;
+    final Price budget;
 
-    Cuisine(String name) {
+    Employee(String name, Cuisine[] cuisines, Price budget) {
         this.name = name;
-    }
-
-    String getName() {
-        return name;
+        this.cuisines = new ArrayList<>(Arrays.asList(cuisines));
+        this.budget = budget;
     }
 }
 
-//TODO use generics?
 enum Price {
-    $(1f), $$(2f), $$$(3f);
-
-    private final float price;
-
-    Price(float price) {
-        this.price = price;
-    }
-
-    float getPrice() {
-        return price;
-    }
-}
-
-class Restaurant {
-    public final String name;
-    public final Cuisine cuisine;
-    final Price price;
-
-    public Restaurant(String name, Cuisine cuisine, Price price) {
-        this.name = name;
-        this.cuisine = cuisine;
-        this.price = price;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Restaurant that = (Restaurant) o;
-        return Objects.equals(name, that.name) &&
-                cuisine == that.cuisine &&
-                price == that.price;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, cuisine, price);
-    }
-
-    @Override
-    public String toString() {
-        return "Restaurant{" +
-                "name='" + name + '\'' +
-                '}';
-    }
+    $, $$, $$$
 }
 
 /**
@@ -99,32 +52,24 @@ class Restaurant {
 
 public class Solution {
 
-    private final Map<Cuisine,Integer> cuisineMap;
-    private final Map<Price, Integer> priceMap;
     private final Map<Restaurant, Integer> restaurantMap;
 
+    private static final Restaurant[] restaurants = new Restaurant[]{
+            new Restaurant("Satisfactory Pita", Cuisine.MEDITERRANEAN, Price.$),
+            new Restaurant("Three Guys", Cuisine.BURGERS, Price.$$),
+            new Restaurant("Chinese Panda", Cuisine.CHINESE, Price.$$$),
+            new Restaurant("Tasty Tacos", Cuisine.MEXICAN, Price.$$)
+    };
+
+    private static final Employee[] employees = new Employee[]{
+            new Employee("Keith Ward", new Cuisine[]{Cuisine.CHINESE}, Price.$$),
+            new Employee("Tony Jackson", new Cuisine[]{Cuisine.MEDITERRANEAN}, Price.$),
+            new Employee("Stephanie Lytton", new Cuisine[]{Cuisine.MEDITERRANEAN, Cuisine.BURGERS, Cuisine.CHINESE}, Price.$$$)
+//            new Employee("John Smith", new Cuisine[] {Cuisine.BURGERS, Cuisine.CHINESE}, Price.$$)
+    };
+
     public Solution() {
-        cuisineMap = mapCuisines();
-        priceMap = mapPrices();
         restaurantMap = mapRestaurants();
-    }
-
-    //TODO use generics?
-    Map<Cuisine, Integer> mapCuisines() {
-        Map<Cuisine, Integer> returnMap = new HashMap<>();
-        for (Cuisine cuisine : Cuisine.values()) {
-            returnMap.put(cuisine, 0);
-        }
-        return returnMap;
-    }
-
-    //TODO use generics?
-    Map<Price, Integer> mapPrices() {
-        Map<Price, Integer> returnMap = new HashMap<>();
-        for(Price price : Price.values()) {
-            returnMap.put(price, 0);
-        }
-        return returnMap;
     }
 
     Map<Restaurant, Integer> mapRestaurants() {
@@ -135,39 +80,11 @@ public class Solution {
         return returnMap;
     }
 
-    void addOccurrenceToCuisine(Cuisine cuisine) {
-        cuisineMap.put(cuisine, cuisineMap.get(cuisine) + 1);
-    }
-
-    void addOccurrenceToPrice(Price price) {
-        priceMap.put(price, priceMap.get(price) + 1);
-    }
-
-    private static final Restaurant[] restaurants = new Restaurant[] {
-            new Restaurant("Satisfactory Pita", Cuisine.MEDITERRANEAN, Price.$),
-            new Restaurant("Three Guys", Cuisine.BURGERS, Price.$$),
-            new Restaurant("Chinese Panda", Cuisine.CHINESE, Price.$$$),
-            new Restaurant("Tasty Tacos", Cuisine.MEXICAN, Price.$$)
-    };
-
-    private static final Employee[] employees = new Employee[] {
-            new Employee("Keith Ward", new Cuisine[]{Cuisine.CHINESE}, Price.$$),
-            new Employee("Tony Jackson", new Cuisine[]{Cuisine.MEDITERRANEAN}, Price.$),
-            new Employee("Stephanie Lytton", new Cuisine[]{Cuisine.MEDITERRANEAN, Cuisine.BURGERS, Cuisine.CHINESE}, Price.$$$)
-//            new Employee("John Smith", new Cuisine[] {Cuisine.BURGERS, Cuisine.CHINESE}, Price.$$)
-    };
-
     public static void main(String[] args) {
         Solution solution = new Solution();
-        List<Cuisine> cuisines = new ArrayList<>();
-        List<Price> prices = new ArrayList<>();
-
 
         for (Restaurant restaurant : restaurants) {
             for (Employee employee : employees) {
-                // TODO remove in favor of map?
-                prices.add(employee.budget);
-                solution.addOccurrenceToPrice(employee.budget);
                 if (restaurant.price == employee.budget) {
                     solution.restaurantMap.put(restaurant, solution.restaurantMap.get(restaurant) + 1);
                 }
@@ -176,69 +93,49 @@ public class Solution {
                 }
             }
         }
-
-
-
-        System.out.println("^^^^^^^^^^^^Cuisine Enum^^^^^^^^^^^");
-        for (Cuisine c : Cuisine.values()) {
-            System.out.println(c);
-        }
-
-        System.out.println("*********Restaurants***********");
-
-        System.out.println(restaurants[0].name);
-        System.out.println(restaurants[1].name);
-        System.out.println(restaurants[2].name);
-        System.out.println(restaurants[3].name);
-
-        System.out.println("----------------cuisine list-----------");
-        for (Cuisine c : cuisines) {
-            System.out.println(c);
-            System.out.println(c.getName());
-        }
-
-        System.out.println("$$$$$$$$$$$$$$$$price list$$$$$$$$$$$$$$$$");
-        for (Price p : prices) {
-            System.out.println(p.getPrice());
-        }
-
-        System.out.println("%%%%%%%%%%%%%%%%Sorted Cuisine Map%%%%%%%%%%%%");
-        solution.cuisineMap.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .forEach(System.out::println);
-
-        System.out.println("$$$$$$$$$$$Sorted Price Map$$$$$$$$$$$$$$$$$$$$$$$$");
-        solution.priceMap.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .forEach(System.out::println);
-
         System.out.println("!@#$!@#$ Sorted Restaurant Map !@#$!@#$");
         solution.restaurantMap.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .forEach(System.out::println);
 
-        //TODO create hash map of all cuisine types to collect number of occurrences
-
-        //TODO find the best cuisine type
-        //TODO find the restaurant that matches cuisine type
-
-        //TODO find the best price
-        //TODO find the restaurant that matches the price
-
-
+//        Map<K,V> topTen =
+//                map.entrySet().stream()
+//                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+//                        .limit(10)
+//                        .collect(Collectors.toMap(
+//                                Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
 }
 
-class Employee {
-    final String name;
-    final List<Cuisine> cuisines;
-    final Price budget;
+class Restaurant {
+    public final String name;
+    public final Cuisine cuisine;
+    final Price price;
 
-    Employee(String name, Cuisine[] cuisines, Price budget) {
+    public Restaurant(String name, Cuisine cuisine, Price price) {
         this.name = name;
-        this.cuisines = new ArrayList<>(Arrays.asList(cuisines));
-        this.budget = budget;
+        this.cuisine = cuisine;
+        this.price = price;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Restaurant that = (Restaurant) o;
+        return Objects.equals(name, that.name) &&
+                cuisine == that.cuisine &&
+                price == that.price;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, cuisine, price);
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
-
