@@ -1,22 +1,65 @@
 package com.pyramid;
 
-
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
+///**
+// * Company Y has employees that like to go out to lunch. Company Y is situated in an area that has many restaurants with different types of cuisine.  Whenever possible, the employees prefer to go out to lunch together – however, there is no guarantee that a single restaurant can satisfy all the employees.
+// * <p>
+// * Our goal is to design a system that keeps track of the restaurants in the area and their cuisine types, and can suggest a restaurant that will best satisfy a party of people.
+// * <p>
+// * Example Restaurants: (Feel free to add more)
+// * •  Name:   Satisfactory Pita
+// * o  Cuisine: Mediterranean
+// * o  Price: $
+// * •  Name:  Three Guys
+// * o  Cuisine: Burgers & Fries
+// * o  Price: $$
+// * •  Name:   China Panda
+// * o  Cuisine: Chinese
+// * o  Price: $$$
+// * <p>
+// * Example Requests:
+// * •  Name:   Keith Ward
+// * o  Budget: $$
+// * o  Cuisine: Chinese
+// * •  Name:  Tony Jackson
+// * o  Budget: $
+// * o  Cuisine: Mediterranean
+// * •  Name: Stephanie Lytton
+// * o  Budget: $$$
+// * o  Cuisine: Mediterranean, Burgers & Fries, Chinese
+// */
+
+/**
+ * Cuisine enum lists all possible Restaurant cuisines.
+ */
 enum Cuisine {
     MEDITERRANEAN, BURGERS, CHINESE, MEXICAN, NOODLES
 }
 
+/**
+ * Price enum list all possible values for Restaurant price and Employee budget. Integer values are assigned
+ * to each element of the enum for comparison so that budget is inclusive of lower price values.
+ */
 enum Price {
-    $, $$, $$$
+    $(1), $$(2), $$$(3);
+
+    private final int price;
+
+    Price(int price) {
+        this.price = price;
+    }
 }
 
+/**
+ * The Employee POJO. Employee members are immutable. It is assumed that Employee members do not change during the
+ * execution of the program.
+ */
 class Employee {
     final String name;
     final List<Cuisine> cuisines;
@@ -27,7 +70,36 @@ class Employee {
         this.cuisines = new ArrayList<>(Arrays.asList(cuisines));
         this.budget = budget;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Employee employee = (Employee) o;
+        return Objects.equals(name, employee.name) &&
+                Objects.equals(cuisines, employee.cuisines) &&
+                budget == employee.budget;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, cuisines, budget);
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "name='" + name + '\'' +
+                ", cuisines=" + cuisines +
+                ", budget=" + budget +
+                '}';
+    }
 }
+
+/**
+ * The Restaurant POJO. Restaurant members are immutable. It is assumed that Restaurant members do not change during the
+ * execution of the program.
+ */
 
 class Restaurant {
     public final String name;
@@ -55,18 +127,29 @@ class Restaurant {
         return Objects.hash(name, cuisine, price);
     }
 
+    /**
+     * Simplified toString() for use with streaming final output.
+     *
+     * @return Simplified Restaurant name for display in final output.
+     */
     @Override
     public String toString() {
         return name;
     }
 }
 
+/**
+ * Thrown when the Restaurant array is null or the Restaurant array contains a null.
+ */
 class InvalidRestaurantException extends Exception {
     public InvalidRestaurantException(String message) {
         super(message);
     }
 }
 
+/**
+ * Thrown when the Employee array is null or the Employee array contains a null.
+ */
 class InvalidEmployeeException extends Exception {
     public InvalidEmployeeException(String message) {
         super(message);
@@ -74,32 +157,12 @@ class InvalidEmployeeException extends Exception {
 }
 
 /**
- * Company Y has employees that like to go out to lunch. Company Y is situated in an area that has many restaurants with different types of cuisine.  Whenever possible, the employees prefer to go out to lunch together – however, there is no guarantee that a single restaurant can satisfy all the employees.
- * <p>
- * Our goal is to design a system that keeps track of the restaurants in the area and their cuisine types, and can suggest a restaurant that will best satisfy a party of people.
- * <p>
- * Example Restaurants: (Feel free to add more)
- * •  Name:   Satisfactory Pita
- * o  Cuisine: Mediterranean
- * o  Price: $
- * •  Name:  Three Guys
- * o  Cuisine: Burgers & Fries
- * o  Price: $$
- * •  Name:   China Panda
- * o  Cuisine: Chinese
- * o  Price: $$$
- * <p>
- * Example Requests:
- * •  Name:   Keith Ward
- * o  Budget: $$
- * o  Cuisine: Chinese
- * •  Name:  Tony Jackson
- * o  Budget: $
- * o  Cuisine: Mediterranean
- * •  Name: Stephanie Lytton
- * o  Budget: $$$
- * o  Cuisine: Mediterranean, Burgers & Fries, Chinese
- *
+ * Restaurant selector Solution implementation. This code assumes that Employee budget is inclusive, that is an Employee
+ * budget indicates the maximum they are willing to spend on a Restaurant. This application creates two Arrays, one for
+ * Employees and one for Restaurants. It then iterates over all the given Restaurants and adds a vote for each when it
+ * matches an Employee's cuisine or is within an Employee's budget. As their are many cases when a tie in votes may
+ * exist, this code displays an ordered list of the top five Restaurants, along with the number of votes tallied for
+ * each Restaurant.
  */
 public class Solution {
 
@@ -173,12 +236,12 @@ public class Solution {
     }
 
     /**
-     * Tallies the number of votes for each restaurant in Restaurant array. A vote is added when the an employee's
-     * cuisine or budget matches the restaurant's cuisine or price.
+     * Tallies the number of votes for each restaurant in Restaurant array. A vote is added when the an Employee's
+     * cuisine matches Restaurant's cuisine or the Employee's budget is less than or equal to the the Restaurant's price.
      *
      * @return A sorted Map, keyed by Restaurant, whose value is the number of votes.
      * @throws InvalidRestaurantException if the restaurant array is null or it contains a null restaurant.
-     * @throws InvalidEmployeeException   if the emploiyee array is null or it contains a null employee.
+     * @throws InvalidEmployeeException   if the employee array is null or it contains a null employee.
      */
     Map<Restaurant, Integer> tallyVotes() throws InvalidRestaurantException, InvalidEmployeeException {
         Map<Restaurant, Integer> restaurantMap = mapRestaurants(restaurants);
@@ -187,7 +250,7 @@ public class Solution {
         }
         for (Restaurant restaurant : restaurants) {
             for (Employee employee : employees) {
-                if (restaurant.price == employee.budget) {
+                if (restaurant.price.compareTo(employee.budget) <= 0) {
                     restaurantMap.put(restaurant, restaurantMap.get(restaurant) + 1);
                 }
                 if (employee.cuisines.contains(restaurant.cuisine)) {
@@ -251,8 +314,8 @@ class SolutionTest {
      */
     @Test
     public void oneRestaurantOneEmployeeZeroVotes() throws InvalidRestaurantException, InvalidEmployeeException {
-        restaurants = new Restaurant[]{new Restaurant("Test Restaurant 4", Cuisine.BURGERS, Price.$)};
-        employees = new Employee[]{new Employee("Test Name 4", new Cuisine[]{Cuisine.MEXICAN}, Price.$$)};
+        restaurants = new Restaurant[]{new Restaurant("Test Restaurant 4", Cuisine.BURGERS, Price.$$)};
+        employees = new Employee[]{new Employee("Test Name 4", new Cuisine[]{Cuisine.MEXICAN}, Price.$)};
         solution = new Solution(restaurants, employees);
         Map<Restaurant, Integer> sortedTopFive = solution.tallyVotes();
         assertEquals(1, sortedTopFive.keySet().size());
@@ -283,5 +346,14 @@ class SolutionTest {
         solution = new Solution(restaurants, employees);
         Map<Restaurant, Integer> sortedTopFive = solution.tallyVotes();
         assertEquals(5, sortedTopFive.size());
+    }
+
+    /**
+     * Checks that comparison of Prices return expected results.
+     */
+    @Test
+    public void budgetComparisonTest() {
+        assertTrue(Price.$.compareTo(Price.$$$) <= 0);
+        assertTrue(Price.$$$.compareTo(Price.$$) >= 0);
     }
 }
